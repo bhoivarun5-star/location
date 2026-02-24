@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoTrack | Precise Location Finder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-dark: #0f172a;
+            --glass: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --accent: #22d3ee;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            color: var(--text-dim);
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .btn-container {
+            position: relative;
+        }
+
+        .main-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .main-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+        }
+
+        .main-btn:active {
+            transform: translateY(0);
+        }
+
+        .main-btn:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #result {
+            margin-top: 2.5rem;
+            padding: 1.5rem;
+            border-radius: 16px;
+            background: rgba(15, 23, 42, 0.5);
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: left;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        #troubleshoot {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 16px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            display: none;
+            text-align: left;
+            animation: slideUp 0.5s ease-out;
+            font-size: 0.9rem;
+        }
+
+        #troubleshoot h3 {
+            color: #f87171;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        #troubleshoot ul {
+            padding-left: 1.25rem;
+            color: var(--text-dim);
+        }
+
+        #troubleshoot li {
+            margin-bottom: 0.4rem;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .data-point {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .data-point:last-child {
+            margin-bottom: 0;
+        }
+
+        .label {
+            color: var(--text-dim);
+            font-weight: 400;
+        }
+
+        .value {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .status {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+
+        .loader {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Decorative Background elements */
+        .blob {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            filter: blur(80px);
+            opacity: 0.15;
+            z-index: -1;
+            border-radius: 50%;
+        }
+
+        .blob-1 {
+            top: -100px;
+            right: -100px;
+        }
+
+        .blob-2 {
+            bottom: -100px;
+            left: -100px;
+            background: var(--accent);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="container">
+        <h1>GeoTrack</h1>
+        <p>Instantly discover your current geographic coordinates with precision.</p>
+
+        <div class="loader" id="loader"></div>
+
+        <div class="btn-container">
+            <button class="main-btn" id="locateBtn">Find My Location</button>
+        </div>
+
+        <div id="result">
+            <div class="data-point">
+                <span class="label">Latitude</span>
+                <span class="value" id="lat">--</span>
+            </div>
+            <div class="data-point">
+                <span class="label">Longitude</span>
+                <span class="value" id="lng">--</span>
+            </div>
+            <div class="data-point">
+                <span class="label">Accuracy</span>
+                <span class="value" id="acc">--</span>
+            </div>
+        </div>
+
+        <div id="troubleshoot">
+            <h3>Fixing Windows Location Error</h3>
+            <p style="margin-bottom: 0.8rem; font-size: 0.85rem;">This error often occurs on Windows because the
+                system's location features are disabled.</p>
+            <ul>
+                <li>Go to <b>Settings > Privacy & security > Location</b>.</li>
+                <li>Ensure <b>Location services</b> is <b>On</b>.</li>
+                <li>Ensure <b>Let apps access your location</b> is <b>On</b>.</li>
+                <li>Ensure <b>Let desktop apps access your location</b> is <b>On</b> (specifically for your browser).
+                </li>
+            </ul>
+        </div>
+
+        <div class="status" id="status">Ready to track</div>
+    </div>
+
+    <script>
+        const locateBtn = document.getElementById('locateBtn');
+        const result = document.getElementById('result');
+        const loader = document.getElementById('loader');
+        const status = document.getElementById('status');
+        const latDisplay = document.getElementById('lat');
+        const lngDisplay = document.getElementById('lng');
+        const accDisplay = document.getElementById('acc');
+        const troubleshoot = document.getElementById('troubleshoot');
+
+        locateBtn.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                status.textContent = "Geolocation is not supported by your browser";
+                return;
+            }
+
+            status.textContent = "Requesting permission...";
+            locateBtn.disabled = true;
+            loader.style.display = 'block';
+            result.style.display = 'none';
+            troubleshoot.style.display = 'none';
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const acc = position.coords.accuracy;
+
+                    latDisplay.textContent = lat.toFixed(6);
+                    lngDisplay.textContent = lng.toFixed(6);
+                    accDisplay.textContent = `${acc.toFixed(1)} meters`;
+
+                    loader.style.display = 'none';
+                    result.style.display = 'block';
+                    locateBtn.disabled = false;
+                    status.textContent = "Location retrieved successfully";
+                },
+                (error) => {
+                    loader.style.display = 'none';
+                    locateBtn.disabled = false;
+
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            status.textContent = "Permission denied. Please allow location access.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            status.textContent = "Location information is unavailable.";
+                            troubleshoot.style.display = 'block';
+                            break;
+                        case error.TIMEOUT:
+                            status.textContent = "Request timed out.";
+                            break;
+                        default:
+                            status.textContent = "An unknown error occurred.";
+                            break;
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        });
+    </script>
+</body>
+
+</html>
